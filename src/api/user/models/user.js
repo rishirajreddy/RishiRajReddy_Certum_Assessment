@@ -9,25 +9,34 @@ const User = sequelize.define(
       primaryKey: true,
       autoIncrement: true,
     },
-    name: {
-      type: DataTypes.STRING,
-    },
-    email: {
-      type: DataTypes.STRING,
-      unique: true,
+    user_type: {
+      type: DataTypes.ENUM("PATIENT", "DOCTOR"),
     },
     phone: {
       type: DataTypes.STRING,
       unique: true,
     },
-    country_code: {
+    first_name: {
       type: DataTypes.STRING,
     },
-    verified: { type: DataTypes.BOOLEAN, defaultValue: false },
-    refresh_token: {
+    last_name: {
       type: DataTypes.STRING,
     },
-    refresh_token_expiration: { type: DataTypes.DATE },
+    pincode: {
+      type: DataTypes.STRING,
+    },
+    dob: {
+      type: DataTypes.DATEONLY,
+    },
+    gender: {
+      type: DataTypes.ENUM("MALE", "FEMALE", "OTHERS"),
+    },
+    otp: {
+      type: DataTypes.STRING,
+    },
+    otp_expiration: {
+      type: DataTypes.DATE,
+    },
   },
   {
     indexes: [

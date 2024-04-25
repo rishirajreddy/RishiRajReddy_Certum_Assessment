@@ -1,9 +1,8 @@
+import SQLite from "sqlite3";
 export default {
-  dialect: "postgres",
-  host: "localhost",
-  // port: 5432,
-  // username: "postgres",
-  // password: "fsociety",
-  // database: "certum",
-  storage: "../certum_db.sqlite",
+  dialect: "sqlite",
+  storage: "../demo.sqlite",
+  dialectOptions: {
+    mode: SQLite.OPEN_READWRITE | SQLite.OPEN_CREATE | SQLite.OPEN_FULLMUTEX,
+  },
 };

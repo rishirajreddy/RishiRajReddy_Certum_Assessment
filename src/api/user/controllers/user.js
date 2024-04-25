@@ -5,17 +5,42 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../services/jwtTokenGenerator.js";
-import bcrypt from "bcryptjs";
-import { request, response } from "express";
-import admin from "../../../utils/firebase.js";
-import { verifyJWT, verifyJWTRefresh } from "../../../services/jwtHandler.js";
+import { generateOTP, setOtpExpiration } from "../../../utils/helpers.js";
+import Patient from "../../patient/models/patient.js";
+import Doctor from "../../doctor/models/doctor.js";
 
 export const create = async (req, res) => {
   try {
-    const user = await User.create(req.body);
-    return res.status(200).send(user);
+    //find the user
+    const { phone } = req.body;
+    const user = await User.findOne({ where: { phone: phone } });
+    const otp = generateOTP();
+    const otp_expiration = setOtpExpiration();
+    if (user) {
+      //save otp and its expiration
+      await user.update({ otp, otp_expiration });
+      return res.status(200).send({ otp, user });
+    }
+    const { user_type } = req.body;
+
+    const newUser = await User.create(req.body);
+    if (user_type == "PATIENT") {
+      //save to patients' table
+      const patient = await Patient.create({ UserID: newUser.dataValues.id });
+    } else {
+      const { speciality, type, availability } = req.body;
+      //save to doctors' table
+      const doctor = await Doctor.create({
+        UserID: newUser.dataValues.id,
+        speciality,
+        type,
+        availability,
+      });
+    }
+    await newUser.update({ otp, otp_expiration });
+    return res.status(200).send({ otp, user: newUser });
   } catch (error) {
-    console.log(error);
+    console.log(error.message);
     return res.status(500).send(
       errorResponse({
         status: 500,
@@ -125,98 +150,59 @@ export const destroy = async (req, res) => {
   }
 };
 
-export const firebasePhoneAuthVerify = async (req, res) => {
+export const verifyOtp = async (req, res) => {
   try {
-    // const idToken = await admin.auth().verifyIdToken(req.body.token);
-    const phoneNumber = req.body.phone;
-    let phone = phoneNumber.slice(-10);
-    if (phone == req.body.phone.slice(-10)) {
-      const user = await User.findOne({ where: { phone: phone } });
-      console.log("User Verified");
-      //update user
-      if (user) {
-        console.log(
-          "Phone number verified successfully And the user is confirmed"
-        );
+    const { phone, otp } = req.body;
+
+    const user = await User.findOne({ where: { phone } });
+    if (!user) {
+      return res.status(204).send(errorResponse({ status: 204 }));
+    }
+    console.log(user.otp_expiration);
+    console.log(new Date());
+    //check OTP
+    if (user.otp == otp) {
+      if (user.otp_expiration > new Date()) {
         const access_token = generateAccessToken(user);
-        const { refresh_token, hashedRefreshToken, token_expiration } =
-          await generateRefreshToken(user);
-        //store the refresh_token
-        const updateUser = await user.update({
-          verified: true,
-          refresh_token: hashedRefreshToken,
-          refresh_token_expiration: token_expiration,
-        });
-        return res
-          .send({
-            access_token,
-            refresh_token,
-            user,
-          })
-          .status(200);
+        await user.update({ otp: null, otp_expiration: null });
+        return res.status(200).send({ access_token, user });
       } else {
         return res
-          .send({
-            message: "Something Went Wrong",
-          })
-          .status(500);
+          .status(400)
+          .send(errorResponse({ status: 400, message: "OTP Expired" }));
       }
     } else {
-      return res.send({ message: "Phone Number Not Verified" }).status(400);
+      return res
+        .status(400)
+        .send(errorResponse({ status: 400, message: "Invalid OTP" }));
     }
   } catch (err) {
-    console.log(err);
-    return res.send(err).status(500);
+    console.log(err.message);
+    return res
+      .status(500)
+      .send(errorResponse({ status: 500, message: err.message }));
   }
 };
 
-export const generateNewAccessToken = async (req, res) => {
+export const login = async (req, res) => {
   try {
-    //get refresh_token
-    const { refresh_token } = req.body;
+    const { phone } = req.body;
 
-    //decode jwt token
-    const { data, error } = verifyJWTRefresh(refresh_token);
-
-    if (error) {
-      return res
-        .status(401)
-        .send(errorResponse({ status: 401, message: error }));
-    }
-    const user = await User.findByPk(data.id);
+    const user = await User.findOne({ where: { phone: phone } });
 
     if (!user) {
-      return res.status(400).send(
+      return res.status(204).send(
         errorResponse({
-          status: 400,
-          message: "User is missing from the database 😱",
+          status: 204,
+          message: "User not found",
         })
       );
     }
+    const otp = generateOTP();
+    const otp_expiration = setOtpExpiration();
+    await user.update({ otp, otp_expiration });
 
-    if (user.refresh_token_expiration < new Date()) {
-      return res
-        .status(400)
-        .send(
-          errorResponse({ status: 400, message: "Token has been Expired" })
-        );
-    }
-    const hashedRefreshToken = user.refresh_token;
-    const isTokenMatched = await bcrypt.compare(
-      refresh_token,
-      hashedRefreshToken
-    );
-
-    if (!isTokenMatched) {
-      return res
-        .status(400)
-        .send(errorResponse({ status: 400, message: "Token is not matched" }));
-    }
-
-    //generate new access token
-    const access_token = generateAccessToken(user);
-
-    return res.status(200).send({ access_token, user });
+    return res.status(200).send({ otp, user });
   } catch (err) {
     console.log(err.message);
     return res

@@ -7,7 +7,7 @@ import {
 } from "../../../../config/env.js";
 export function generateAccessToken(user) {
   const token = JWT.sign(
-    { id: user.id, email: user.email },
+    { id: user.id, phone: user.email },
     jwt_access_token_secret,
     {
       expiresIn: "3d",

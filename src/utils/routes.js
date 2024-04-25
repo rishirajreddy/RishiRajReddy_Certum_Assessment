@@ -1,17 +1,14 @@
 import express from "express";
-import generator from "../api/permission/services/generator.js";
-
 import app from "../../server.js";
-import { checkRolePermissions } from "../middlewares/checkPermissions.js";
 const router = express.Router();
-const { routes } = await generator();
+import userRoutes from "../api/user/routes/user.js";
+import patientRoutes from "../api/patient/routes/patient.js";
+import doctorRoutes from "../api/doctor/routes/doctor.js";
+import appointmentRoutes from "../api/appointment/routes/appointment.js";
 
-routes.forEach((item) => {
-  router[item.method.toLowerCase()](
-    item.endpoint,
-    [checkRolePermissions, ...item.middlewares],
-    item.handler
-  );
-});
-app.use(router);
-// app.use(notFoundHandler);
+router.use("/", userRoutes);
+router.use("/", patientRoutes);
+router.use("/", appointmentRoutes);
+router.use("/", doctorRoutes);
+
+export default router;

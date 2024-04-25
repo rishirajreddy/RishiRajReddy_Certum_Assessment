@@ -42,3 +42,21 @@ export function generateUniqueIDs({ name, prefix }) {
   const shortname = shortenName(name);
   return `${prefix}-${shortname}${hash}${uniqueIdentifier}`;
 }
+
+export function generateOTP() {
+  const buffer = crypto.randomBytes(3);
+
+  const hex = buffer.toString("hex");
+
+  const number = parseInt(hex, 16);
+
+  const otp = ("000000" + number).slice(-6);
+
+  return otp;
+}
+
+export function setOtpExpiration() {
+  const now = new Date();
+
+  return now.getTime() + 5 * 60000;
+}
