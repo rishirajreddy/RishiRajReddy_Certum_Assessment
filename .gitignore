@@ -1,0 +1,13 @@
+# .gitignore
+
+# Ignore the db.config.js file in the config directory
+
+# Ignore the node_modules directory
+/node_modules
+
+# Exclude .zip files
+*.zip
+
+# Exclude files in the public/uploads directory
+/public/uploads/*
+database_design.md
