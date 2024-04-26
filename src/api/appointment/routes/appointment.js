@@ -6,9 +6,14 @@ import {
   getAppointmentDoctors,
 } from "../controllers/appointment.js";
 import { verifyJWT } from "../../../middlewares/verifyJWT.js";
+import { appoinmentValidation } from "../middlewares/appointment.js";
 const router = Router();
 
-router.post("/appointments", [verifyJWT], bookAppointment);
+router.post(
+  "/appointments",
+  [verifyJWT, appoinmentValidation],
+  bookAppointment
+);
 router.get("/appointments", [verifyJWT], getAllAppointments);
 router.get("/doctors/appointments", [verifyJWT], getAppointmentDoctors);
 

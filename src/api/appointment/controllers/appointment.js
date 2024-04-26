@@ -1,6 +1,7 @@
 import { errorResponse } from "../../../services/errorHandler.js";
 import { getPagination } from "../../../utils/helpers.js";
 import Doctor from "../../doctor/models/doctor.js";
+import Patient from "../../patient/models/patient.js";
 import User from "../../user/models/user.js";
 import Appointment from "../models/appointment.js";
 
@@ -10,7 +11,6 @@ export const bookAppointment = async (req, res) => {
 
     //check doctor exists
     const doctor = await Doctor.findByPk(doctor_id);
-    console.log(doctor);
     if (!doctor) {
       return res.status(400).send(
         errorResponse({
@@ -19,16 +19,16 @@ export const bookAppointment = async (req, res) => {
         })
       );
     }
-    const patient_id = req.data.id;
+    const patient = await Patient.findOne({ UserID: req.data.id });
     const appointment = await Appointment.create({
       DoctorId: doctor_id,
-      PatientId: patient_id,
+      PatientId: patient.id,
       appointment_date,
       status: "SCHEDULED",
     });
     return res.status(200).send(appointment);
   } catch (err) {
-    console.log(err.message);
+    console.log(err);
     return res
       .status(500)
       .send(errorResponse({ status: 500, message: err.message }));

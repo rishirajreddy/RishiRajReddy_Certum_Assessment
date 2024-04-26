@@ -8,7 +8,8 @@
     "startpm2": "pm2 start app.js",
     "startnode": "node app.js",
     "dev": "nodemon app.js",
-    "initialize": "node ./src/utils/data_initializer.js"
+    "initialize": "node ./src/utils/data_initializer.js",
+    "import": "node import.js"
   },
   "keywords": [],
   "author": "",
@@ -28,10 +29,10 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "nodemon": "^3.0.3",
+    "pg": "^8.11.5",
     "sequelize": "^6.37.1",
     "sequelize-cli": "^6.6.2",
     "sharp": "^0.32.5",
-    "sqlite3": "^5.1.7",
     "uid": "^2.0.2"
   }
 }

@@ -158,8 +158,6 @@ export const verifyOtp = async (req, res) => {
     if (!user) {
       return res.status(204).send(errorResponse({ status: 204 }));
     }
-    console.log(user.otp_expiration);
-    console.log(new Date());
     //check OTP
     if (user.otp == otp) {
       if (user.otp_expiration > new Date()) {
